@@ -1,0 +1,111 @@
+---
+title: "EDS 222: Final Project"
+author: "Carly Caswell"
+date: "`r Sys.Date()`"
+output:
+  tufte::tufte_html: default
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Load all the packages needed here
+library(tidyverse)
+library(readr)
+library(gt)
+library(tufte)
+
+# Set your filepath here! Or, set this up as an .Rproj if you'd like.
+rootdir <- ("~/Documents/MEDS/Fall_Q2/EDS-222-Stats/Assignments")
+datadir <- file.path(rootdir,"eds222-final","data")
+```
+
+ABOUT:
+
+I am interested in the relationship between and .
+
+DATA:
+
+Dataset 1 - Titled "xyz" dataset called, this contains x,y, z and comes from SOURCE. I will primarily be using variables a,b,c, which contain ...... "the mean number of days with minimum temperature below freezing (mean over the years 1931-1960)."
+
+Dataset 2 - Titled "xyz" dataset from COUNTRY. These data were obtained from the [ERA5 database](https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5), a product made available by the European Centre for Medium-Range Weather Forecast. The high-resolution hourly gridded data were aggregated to the municipality by month level -- that is, each observation in these data report a monthly average temperature value and a monthly cumulative precipitation value for one of the 1,123 municipalities across the country.[\^3]
+
+```{r}
+# Reading in the data:
+    
+
+#Making them dataframes:
+ = data.frame()
+ = data.frame()
+
+
+```
+
+EXPLORATION:
+
+```{r}
+#Let's take a look at some of this data further:
+head()
+
+
+#Creating a scatter plot to view the relationship:
+    ggplot(data=, aes(x=, y = )) + 
+      geom_point() + theme_minimal() 
+      
+
+#Computing the mean and standard dev for the Frost days of each region:
+days_below_zero = state_frost %>% 
+  group_by(state.region) %>% 
+  summarize("Frost Mean" = mean(Frost), "Frost SD" = sd(Frost)) 
+
+#Reviewing the results table:
+print(days_below_zero)
+#The region with the highest variance in number of frost days is the West region
+```
+
+**I see a mostly positive/negative relationship between y in units and x. The correlation seems to be mostly strong with a few outliers that could have an impact on the overall correlation coefficient.**
+
+**I think this relationship makes intuitive sense because the higher the temperature the drier and more fire-prone conditions there will be.**
+
+MY QUESTION:
+
+Is the mean number of frost days different in the North Central region than in the South?
+
+My null and alternative hypotheses:
+
+$$H_{O}: \mu_{north} - \mu_{south} = 0$$
+
+$$H_{A}: \mu_{north} - \mu_{south} \neq 0$$
+
+ANALYSIS:
+
+```{r}
+#Running a regression:
+summary(lm(area ~ temp, data =ffires))
+
+#Running a t.test on the filtered data:
+t.test(Frost ~ state.region, data = filtered_state_frost, conf.level = 0.95)
+
+#Construct a 95% confidence interval for your slope coefficient:
+conf_interval <- confint(murders, level = .95)[2, ] #using the confint function
+
+print(paste('I am 95% confident the range', round(conf_interval[1], 3), 'and',  round(conf_interval[2], 3), 'contains the true population difference between murder rates per 100,000 people and average number of frost days between 1931 and 1960.'))
+
+```
+
+Interpreting the intercept and slope coefficients:
+
+\*\*When the average number of x is 0, the b1 is 11.376 per 100,000 people between the years 1931-1960.
+
+**For every 1 day increase in average frost days per year, the murder rate per 100,000 people decreases by -.03827.**
+
+Is there a statistically significant relationship between frost days on murder rates? At what significant level is this effect significant?
+
+**Yes, p value is .00005 with a significance level of .05 so this proves that there is a significant relationship between Frost days and murder rates**
+
+**The p-value is just slightly different than the manual calculation, but I still end up with the same conclusion (reject the null). This is what I'd expect since I'm using a q normal distribution in my manual approach and a t distribution in the function approach.**
