@@ -1,2 +1,4 @@
-# eds222-final
-A repository for analyzing covid-19 impacts on the transportation sector's emissions
+# EDS22 Final Project: Analyzing Snowfall Changes Over Time
+
+A repository for analyzing snowfall and temperature variables from the years 2001 - 2023. 
+
