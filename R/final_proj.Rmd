@@ -43,7 +43,7 @@ I am also interested in the relationship between temperature changes and snowfal
 
 DATA:
 
-I gathered daily snow depth and temperature data from the USDA\'s Natural Resources Conservation Service and National Water and Climate Center (<https://nwcc-apps.sc.egov.usda.gov/site-plots/#VT>). This data source contains two datasets:
+I gathered daily snow depth and temperature data from the USDA's Natural Resources Conservation Service and National Water and Climate Center (<https://nwcc-apps.sc.egov.usda.gov/site-plots/#VT>). This data source contains two datasets:
 
 Dataset 1 - Titled `vt_temps` , this dataset contains daily temperature data (in degrees Fahrenheit) from the years 2001 - 2023. These data points were collected from a weather station at the Mount Mansfield SCAN Site numbered 2041. Mount Mansfield is Vermont's largest mountain peak, located in the Green Mountains at an elevation of 4395'.
 
@@ -81,7 +81,7 @@ ggplot(tidy_vt_temps, aes(x = date, y = value)) +
 
 #I've decided I want to compare months November - December 
 #Filter for only the months I want:
-tidy_vt_temps_winter <- tidy_vt_temps_winter %>% 
+tidy_vt_temps_winter <- tidy_vt_temps %>% 
    mutate(month = month(date)) %>% 
   rename(temp = value)
 
@@ -89,7 +89,7 @@ tidy_vt_temps_winter <- tidy_vt_temps_winter %>%
 #Calculating the mean and standard dev for the temps for each month each year:
 temp_monthly_stats = tidy_vt_temps_winter %>% 
   group_by(year, month(date)) %>% 
-  summarize("Monthly_Mean" = round(mean(value, na.rm = TRUE), 2), "Monthly_SD" = round(sd(value, na.rm = TRUE), 2))
+  summarize("Monthly_Mean" = round(mean(temp, na.rm = TRUE), 2), "Monthly_SD" = round(sd(temp, na.rm = TRUE), 2))
 
 #Reviewing the results table:
 print(temp_monthly_stats)
@@ -120,7 +120,7 @@ ggplot(tidy_vt_snow, aes(x = date, y = value)) +
 #I've decided I want to compare months November - December
 #Filter for only the months I want:
 tidy_vt_snow_winter <- tidy_vt_snow %>% 
-  mutate(month = month(tidy_vt_snow_winter$date)) %>% 
+  mutate(month = month(tidy_vt_snow$date)) %>% 
   rename(snowfall = value)
 
 #Calculating the mean and standard dev for the snowfall in inches for each month each year:
@@ -152,23 +152,10 @@ tidy_vt_temps_winter %>%
 
 Now that I have all my data, I can plot it together to get a visual comparison of years:
 
-```{r}
-#graph depicting annual snowfall from....
-#graph 1:
-ggplot(tidy_vt_snow_winter_years, aes(x = month_day, y = snowfall, group = year, color = as.factor(year))) +
-  geom_line(size = 1) +
-  labs(title = "Comparison of Snowfall on Mount Mansfield from 2002 to 2022",
-       x = "Dates",
-       y = "Snowfall (in inches)",
-       color = "Year") +
-  scale_color_manual(values = c("2002" = "blue", "2022" = "lightblue")) +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-```
 
 ```{r}
-#graph 2:
-plot_ly(tidy_vt_test, 
+#graph depicting annual snowfall....
+plot_ly(tidy_vt_snow_winter_years, 
         x = ~month_day, 
         y = ~snowfall, 
         color = ~as.factor(year), 
@@ -182,8 +169,8 @@ plot_ly(tidy_vt_test,
 ```
 
 ```{r}
-#graph 3:
-plot_ly(tidy_vt_temp_test, 
+#graph depicting annual temps...
+plot_ly(tidy_vt_temp_winter_years, 
         x = ~month_day, 
         y = ~temp, 
         color = ~as.factor(year), 
@@ -196,10 +183,6 @@ plot_ly(tidy_vt_temp_test,
          legend = list(title = "Year"))
 ```
 
-**I see a mostly positive/negative relationship between y in units and x. The correlation seems to be mostly strong with a few outliers that could have an impact on the overall correlation coefficient.**
-
-**I think this relationship makes intuitive sense because.....**
-
 SUMMARY STATISTICS:
 
 ```{r}
@@ -209,26 +192,31 @@ vt_data <- merge(tidy_vt_snow_winter, tidy_vt_temps_winter, by = 'date')
 #taking a look at the data:
 vt_data <- vt_data %>% 
   select(-"Min.x", -"10%.x",-"30%.x", -"70%.x", -"90%.x", -"Max.x", -"Median (POR).x", -"year.x", -"month.x", -"Min.y",-"10%.y", -"30%.y",-"70%.y",-"90%.y",-"Max.y",-"Median (POR).y") %>% 
-  rename(year = "year.y", month = "month.y")
+  rename(year = "year.y", month = "month.y") %>% 
+  filter( year %in% c('2001', '2002', '2003', '2015', '2016','2022'))
 vt_data
 
 #Summarizing the snowfall and temperature data for recent years:
 vt_recent <- 
   vt_data %>% 
-  filter(year %in% c('2015', '2016', '2022')) %>% 
+  filter(year %in% c('2015', '2016', '2022'))
+
+vt_recent_stats <- vt_recent %>% 
 summarise(snow_mean = mean(snowfall, na.rm = TRUE), snow_sd = sd(snowfall, na.rm = TRUE), snow_median = median(snowfall, na.rm = TRUE),temp_mean = mean(temp, na.rm = TRUE), temp_sd = sd(temp, na.rm = TRUE), temp_median = median(temp, na.rm = TRUE))
 
-#visualizing the data:
-vt_recent
+#visualizing the stats table:
+vt_recent_stats
 
 #Summarizing the snowfall and temperature data before for non-recent years:
 vt_non_recent <- 
   vt_data %>% 
-  filter(year %in% c('2001', '2002', '2003')) %>% 
+  filter(year %in% c('2001', '2002', '2003'))
+
+vt_non_recent_stats <- vt_non_recent %>% 
 summarise(snow_mean = mean(snowfall, na.rm = TRUE), snow_sd = sd(snowfall, na.rm = TRUE), snow_median = median(snowfall, na.rm = TRUE),temp_mean = mean(temp, na.rm = TRUE), temp_sd = sd(temp, na.rm = TRUE), temp_median = median(temp, na.rm = TRUE))
 
-#visualizing the data:
-vt_non_recent
+#visualizing the stats table:
+vt_non_recent_stats
 ```
 
 Now I'm going to look at the temperature and snowfall by splitting my data. Since I have years of data from 2001 - 2022, with a few years missing data, I want to bucket more recent years to years farther in the past. For this example, I'm going to bucket my data to look at the years 2015,2016,2022 (recent) and 2001, 2002, and 2003 (non-recent).
@@ -238,65 +226,82 @@ One big challenge here was the fact that we had quite limited data for many year
 Snowfall Table:
 
 | Years                         | Mean (inches) | Standard Deviation (inches) | Median (inches) |
-|--------------------|-----------------|-----------------|-----------------|
-| Recent (2015,2016, 2022)      | 2.78          | 3.65                        | 1               |
-| Non-Recent (2001, 2002, 2003) | 7.73          | 7.15                        | 6               |
+|--------------------|------------------|------------------|------------------|
+| Recent (2015,2016, 2022)      | 3.92          | 8.37                        | 0               |
+| Non-Recent (2001, 2002, 2003) | 8.61          | 11.48                       | 0               |
 
 Temperature Table:
 
 | Years                         | Mean (F) | Standard Deviation (F) | Median (F) |
-|--------------------|-----------------|-----------------|-----------------|
-| Recent (2015,2016, 2022)      | 30.04    | 10.19                  | 30.2       |
-| Non-Recent (2001, 2002, 2003) | 26.11    | 12.14                  | 26.6       |
+|--------------------|------------------|------------------|------------------|
+| Recent (2015,2016, 2022)      | 42.28    | 18.83                  | 44.06      |
+| Non-Recent (2001, 2002, 2003) | 39.64    | 19.43                  | 41.18      |
 
-I can see that.......
 
 **OLS:**
 
 I am aiming to draw conclusions about the Vermont snow climate using this sample from Mount Mansfield of temperature and snowfall observations. In order to draw conclusions, I need to check the OLS assumptions before running any regression. To do that I am going to plot the distribution of my snowfall and temperature samples.
 
 ```{r}
-vt_hist <-
-  ggplot(tidy_vt_snow_winter) +
+#Snowfall Distributions Check
+#Non recent years
+vt_hist_non <-
+  ggplot(vt_non_recent) +
   geom_histogram(aes(x = snowfall)) +
 labs(
-    title = "Snowfall Distribution During November and December",
+    title = "Recent Snowfall Distribution During November and December",
     x = "Snowfall (inches)",
     y = "Frequency"
   )
-vt_hist
+vt_hist_non
 
-ggplot(tidy_vt_snow_winter) +
-  geom_histogram(aes(x = exp(snowfall))) +
+#Recent years
+vt_hist_recent <-
+  ggplot(vt_non_recent) +
+  geom_histogram(aes(x = snowfall)) +
 labs(
-    title = "Snowfall Distribution During November and December",
+    title = "Recent Snowfall Distribution During November and December",
     x = "Snowfall (inches)",
     y = "Frequency"
   )
+vt_hist_recent
 
 ```
 
-\*\*This data is skewed to the right. There is a right long tail. This distribution is unimodal.\*\*
+\*\*Both datasets are skewed to the right. There is a right long tail. This distribution is unimodal.\*\*
 
 ```{r}
-vt_temp_hist <-
-  ggplot(tidy_vt_temps_winter) +
+#Temperature Distributions Check
+#Non recent years
+vt_hist_non <-
+  ggplot(vt_non_recent) +
   geom_histogram(aes(x = temp)) +
-  labs(
-    title = "Temperature Distribution During November and December",
-    x = "Temperature (in Fahrenheit)",
+labs(
+    title = "Recent Temperature Distribution During November and December",
+    x = "Degrees (Fahrenheit)",
     y = "Frequency"
   )
-vt_temp_hist
+vt_hist_non
+
+#Recent years
+vt_hist_recent <-
+  ggplot(vt_non_recent) +
+  geom_histogram(aes(x = temp)) +
+labs(
+    title = "Recent Temperature Distribution During November and December",
+    x = "Degrees (Fahrenheit)",
+    y = "Frequency"
+  )
+vt_hist_recent
 ```
 
-\*\*This data is symmetric. This distribution looks approximately normally distributed. This distribution is unimodal.\*\*
+\*\*This data is faily symmetric. This distribution looks somewhat normally distributed. This distribution is bimodal.\*\*
 
 I'm going to plot QQ plots to see how my normal distribution fits:
 
 ```{r}
 ##QQ Plot for Snowfall
-ggplot(vt_data, aes(sample = snowfall)) +
+ggplot(vt_recent, aes(sample = snowfall)) +
   geom_qq() +
   geom_qq_line() +
   ggtitle("Q-Q Plot for Snowfall")
@@ -304,7 +309,7 @@ ggplot(vt_data, aes(sample = snowfall)) +
 
 ```{r}
 #QQ Plot for Temperature
-ggplot(vt_data, aes(sample = temp)) +
+ggplot(vt_non_recent, aes(sample = temp)) +
   geom_qq() +
   geom_qq_line() +
   ggtitle("Q-Q Plot for Temperature")
@@ -312,8 +317,10 @@ ggplot(vt_data, aes(sample = temp)) +
 
 ```{r}
 ##Transformed QQ Plot for Snowfall
-exp_snowfall <-exp(vt_data$snowfall)
-ggplot(vt_data, aes(sample = exp_snowfall)) +
+log_snowfall <-log(vt_recent$snowfall)
+log_snowfall_non <- log(vt_non_recent$snowfall)
+
+ggplot(vt_recent, aes(sample = log_snowfall)) +
   geom_qq() +
   geom_qq_line() +
   ggtitle("Q-Q Plot for Transformed Precipitation Data")
@@ -337,10 +344,10 @@ $$H_{A}: \mu_{recent} - \mu_{nonrecent} \neq 0$$
 
 ```{r}
 #Categorizing data
-tidy_vt_snow_winter$category <- ifelse(tidy_vt_snow_winter$year %in% c(2015, 2016, 2020), "recent", "not")
+vt_data$category <- ifelse(vt_data$year %in% c(2015, 2016, 2020), "recent", "not")
 
 #Running a t.test on the filtered data:
-result <- t.test(snowfall ~ category, data = tidy_vt_snow_winter, conf.level = 0.95)
+result <- t.test(snowfall ~ category, data = vt_data, conf.level = 0.95)
 print(result)
 
 #Extract confidence interval
@@ -359,7 +366,7 @@ A consideration for this analysis would include other variables such as wind spe
 
 TEMPERATURE
 
-Is the mean snowfall in inches different in recent years than in previous years?
+Is the mean temperature in fahrenheit different in recent years than in previous years?
 
 My null and alternative hypotheses:
 
@@ -369,10 +376,10 @@ $$H_{A}: \mu_{recent} - \mu_{nonrecent} \neq 0$$
 
 ```{r}
 #Categorizing data
-tidy_vt_temps_winter$category <- ifelse(tidy_vt_temps_winter$year %in% c(2015, 2016, 2020), "recent", "not")
+vt_data$category <- ifelse(vt_data$year %in% c(2015, 2016, 2020), "recent", "not")
 
 #Running a t.test on the filtered data:
-result <- t.test(temp ~ category, data = tidy_vt_temps_winter, conf.level = 0.95)
+result <- t.test(temp ~ category, data = vt_data, conf.level = 0.95)
 print(result)
 
 #Extract confidence interval
@@ -382,16 +389,42 @@ print(paste('I am 95% confident the range', round(conf_interval[1], 2), 'and',  
 
 Conclusion:
 
-Reject the null hypothesis!
+Fail to reject the null hypothesis!
+In this case I would fail to reject the null hypothesis and this result is not statistically significant at the .05 significance level. I do not have strong evidence to suggest that the observed difference between temperature in recent years and non-recent years is unlikely to have occurred by random chance alone.
 
-**Yes, p value is .001 with a significance level of .05.** In this case I would reject the null hypothesis and this result is statistically significant at the .05 significance level. I have strong evidence to suggest that the observed difference between temperature in recent years and non-recent years is unlikely to have occurred by random chance alone.
-
-A consideration for this analysis could include other variables such as el nino/la nina years, relative humidity, and precipitation. Given this was over one weather station for a longer duration, changes could have occurred to the monitor's position, measurement variability, and quality since temperature can potentially be a sensitive variable to measure. 
-
+A consideration for this analysis could include other variables such as el nino/la nina years, relative humidity, and precipitation. Given this was over one weather station for a longer duration, changes could have occurred to the monitor's position, measurement variability, and quality since temperature can potentially be a sensitive variable to measure.
 
 
-OTHER ANALYSES:
-These did not have any conclusions and required further learning/work to complete.
+Linear Regression
+
+```{r}
+# I'm going to join my larger datasets together first:
+vt_all_years_data <- merge(tidy_vt_snow_winter, tidy_vt_temps_winter, by = 'date')
+
+#taking a look at the data:
+vt_all_years_data <- vt_all_years_data %>% 
+  select(-"Min.x", -"10%.x",-"30%.x", -"70%.x", -"90%.x", -"Max.x", -"Median (POR).x", -"year.x", -"month.x", -"Min.y",-"10%.y", -"30%.y",-"70%.y",-"90%.y",-"Max.y",-"Median (POR).y") %>% 
+  rename(year = "year.y", month = "month.y")
+vt_all_years_data
+#aggregating all years of data for snowfall and temp:
+
+#running a simple regression on snowfall and temperature variables for my sampling years
+summary(lm(snowfall ~ temp, data = vt_all_years_data))
+```
+**Intercept: When the average temperature is 0 degrees Fahrenheit, the snowfall is, on average, 20.6 inches between 2001-2023.**
+
+**Slope: For every 1 degree increase in temperature each day, the rate of snowfall decreases by .35.**
+
+**R-Squared: With an r-squared value of .40, I can conclude that 40% of the snowfall data can be explained by temperature alone.
+
+
+
+
+
+
+
+
+OTHER ANALYSES: These did not have any conclusions and required further learning/work to complete.
 
 ```{r}
 #Tried a moving average: 
@@ -404,15 +437,13 @@ legend("topright", legend = c("Original", "Moving Average"), col = c("blue", "re
 
 ```{r}
 #Tried a time series decomposition:
-test <- as_tsibble(tidy_vt_snow_winter) 
+test <- as_tsibble(tidy_vt_temps) 
  test %>% 
   model(classical_decomposition(snowfall, type = "additive")) %>% 
   components() %>% autoplot() + 
   labs(title = "Time Series Decomposition")
  
 ```
-
-Is the mean temperature days below freezing different in recent years than in previous years?
 
 ```{r}
 #Wilcox Test 
